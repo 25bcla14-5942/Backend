@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // MongoDB Atlas connection
-const dbURI = "mongodb+srv://25bcla14_db_user:kju@5942@cluster0.kvmscbn.mongodb.net/?appName=Cluster0";
+const dbURI = "mongodb+srv://25bcla14_db_user:kju%405942@cluster0.kvmscbn.mongodb.net/portfolioDB?retryWrites=true&w=majority";
 
 mongoose
   .connect(dbURI)
@@ -19,9 +19,9 @@ mongoose
 
 // Schema
 const MessageSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  message: String,
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  message: { type: String, required: true },
   createdAt: {
     type: Date,
     default: Date.now
@@ -30,26 +30,38 @@ const MessageSchema = new mongoose.Schema({
 
 const Message = mongoose.model("Message", MessageSchema);
 
-// API route to receive form data
+// ✅ CONTACT API
 app.post("/api/contact", async (req, res) => {
   try {
-    const newMessage = new Message({
-      name: req.body.name,
-      email: req.body.email,
-      message: req.body.message
-    });
+    const { name, email, message } = req.body;
 
+    // Validation
+    if (!name || !email || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required"
+      });
+    }
+
+    const newMessage = new Message({ name, email, message });
     await newMessage.save();
 
-    res.status(200).json({ success: true, message: "Saved to MongoDB" });
+    return res.status(200).json({
+      success: true,
+      message: "Message saved successfully 🚀"
+    });
 
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false });
+    console.log("ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error occurred"
+    });
   }
 });
 
-// Test route (to check backend is running)
+// ✅ TEST ROUTE
 app.get("/", (req, res) => {
   res.send("Backend is running ✅");
 });
